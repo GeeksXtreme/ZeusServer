@@ -1,7 +1,14 @@
+var express = require('express'),
+	fs = require('fs');
+
 module.exports = function(app){
 
-	//home route
-	var home = require('../app/controllers/home');
-	app.get('/', home.index);
+	var modelsPath = __dirname + '/../app/controllers';
+	fs.readdirSync(modelsPath).forEach(function (file) {
+	  if (file.indexOf('.js') >= 0) {
+	    var route = require(modelsPath + '/' + file);
+	    app[route.method](route.path, route.func);
+	  }
+	});
 
 };
