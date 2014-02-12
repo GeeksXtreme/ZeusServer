@@ -1,17 +1,14 @@
-var token = require('../lib/token');
+var express = require('express'),
+	fs = require('fs');
 
 module.exports = function(app){
 
-	token.signin(app);
-
-	token.protect(app, '/protect');
-
-	app.get('/protect/shit', function(req, res){
-		res.json(req.user);
+	var modelsPath = __dirname + '/../app/controllers';
+	fs.readdirSync(modelsPath).forEach(function (file) {
+	  if (file.indexOf('.js') >= 0) {
+	    var route = require(modelsPath + '/' + file);
+	    app[route.method](route.path, route.func);
+	  }
 	});
-
-	//home route
-	var home = require('../app/controllers/home');
-	app.get('/', home.index);
 
 };
