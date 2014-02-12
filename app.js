@@ -1,7 +1,10 @@
+require('./app/lib/clim')();
+
 var express = require('express'),
   mongoose = require('mongoose'),
   fs = require('fs'),
-  config = require('./config/config');
+  config = require('./config/config'),
+  facebook = require('./config/facebook');
 
 mongoose.connect(config.db);
 var db = mongoose.connection;
