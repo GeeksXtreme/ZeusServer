@@ -7,7 +7,14 @@ module.exports = function(app){
 	fs.readdirSync(modelsPath).forEach(function (file) {
 	  if (file.indexOf('.js') >= 0) {
 	    var route = require(modelsPath + '/' + file);
-	    app[route.method](route.path, route.func);
+	    if (toString.call(route) === "[object Array]"){
+	    	for (var i = route.length - 1; i >= 0; i--) {
+	    		app[route[i].method](route[i].path, route[i].func);
+	    	};
+	    } else {
+	    	app[route.method](route.path, route.func);
+	    }
+	    
 	  }
 	});
 
