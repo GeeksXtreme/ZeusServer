@@ -1,4 +1,4 @@
-require('./app/lib/clim')();
+require('./lib/clim')();
 
 var express = require('express'),
   mongoose = require('mongoose'),
