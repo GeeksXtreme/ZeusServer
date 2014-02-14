@@ -20,8 +20,7 @@ fs.readdirSync(modelsPath).forEach(function (file) {
 });
 
 var app = express();
+app.httpServer = app.listen(config.port);
 
 require('./config/express')(app, config);
 require('./config/routes')(app);
-
-app.listen(config.port);
