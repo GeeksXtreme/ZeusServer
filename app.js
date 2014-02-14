@@ -1,10 +1,12 @@
+facebook_sdk = require('facebook-node-sdk');
+facebook = require('./config/facebook');
+
 require('./lib/clim')();
 
 var express = require('express'),
   mongoose = require('mongoose'),
   fs = require('fs'),
-  config = require('./config/config'),
-  facebook = require('./config/facebook');
+  config = require('./config/config');
 
 mongoose.connect(config.db);
 var db = mongoose.connection;
@@ -20,6 +22,10 @@ fs.readdirSync(modelsPath).forEach(function (file) {
 });
 
 var app = express();
+app.use(express.bodyParser());
+app.use(express.cookieParser());
+app.use(express.session({ secret: 'zeus' }));
+app.use(facebook_sdk.middleware({ appId: facebook.config.appID, secret: facebook.config.secret }));
 
 require('./config/express')(app, config);
 require('./config/routes')(app);
