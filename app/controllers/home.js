@@ -1,7 +1,7 @@
 var mongoose = require('mongoose'),
   Article = mongoose.model('Article');
 
-exports = function(app){
+module.exports = function(app){
 	app.get('/', function(req, res){
 		Article.find(function(err, articles){
 			if(err) throw new Error(err);

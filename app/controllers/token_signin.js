@@ -1,5 +1,5 @@
 token = require('../../lib/token');
 
-exports = function(app) {
+module.exports = function(app) {
 	app.get('/token/signin',token.signIn());
 };
