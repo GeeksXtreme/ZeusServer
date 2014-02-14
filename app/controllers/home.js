@@ -1,10 +1,8 @@
 var mongoose = require('mongoose'),
   Article = mongoose.model('Article');
 
-module.exports = {
-	path: '/',
-	method: 'get',
-	func: function(req, res){
+exports = function(app){
+	app.get('/', function(req, res){
 		Article.find(function(err, articles){
 			if(err) throw new Error(err);
 			res.render('home/index', {
@@ -12,5 +10,5 @@ module.exports = {
 				articles: articles
 			});
 		});
-	}
+	});
 };
