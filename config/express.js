@@ -29,6 +29,5 @@ module.exports = function(app, config) {
     app.use(express.bodyParser());
     app.use(express.cookieParser());
     app.use(express.session({ secret: 'zeus' }));
-    app.use(facebook_sdk.middleware({ appId: facebook.config.appID, secret: facebook.config.secret }));
   });
 };
