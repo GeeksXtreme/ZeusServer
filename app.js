@@ -6,7 +6,10 @@ require('./lib/clim')();
 var express = require('express'),
   mongoose = require('mongoose'),
   fs = require('fs'),
-  config = require('./config/config');
+  config = require('./config/config'),
+  facebook = require('./config/facebook');
+  readDir = require('./lib/readDir'),
+  Q = require('q');
 
 mongoose.connect(config.db);
 var db = mongoose.connection;
@@ -15,19 +18,58 @@ db.on('error', function () {
 });
 
 var modelsPath = __dirname + '/app/models';
-fs.readdirSync(modelsPath).forEach(function (file) {
-  if (file.indexOf('.js') >= 0) {
-    require(modelsPath + '/' + file);
-  }
+readDir(modelsPath, function(err, data){
+	data.files.forEach(function(file) {
+		if (file.length - file.indexOf('.js') === 3) {
+			require(file);
+		}
+	});
 });
 
 var app = express();
-app.use(express.bodyParser());
-app.use(express.cookieParser());
-app.use(express.session({ secret: 'zeus' }));
-app.use(facebook_sdk.middleware({ appId: facebook.config.appID, secret: facebook.config.secret }));
+app.httpServer = app.listen(config.port);
 
+var modules = {},
+	modulesDeferreds = {};
+
+app.createModule = function(name, module, override){
+	if (modules[name] && !override){
+		console.error('Module '+name+' has already been defined');
+		process.exit(1);
+	} else {
+		modules[name] = module;
+		if (modulesDeferreds[name]){
+			while (modulesDeferreds[name].length > 0){
+				modulesDeferreds[name].pop().resolve(module);
+			}
+			delete modulesDeferreds[name];
+		}
+	}
+};
+
+app.require = function(listOfModules, fn){
+	var listOfPromise = [];
+	for (var i = 0, l = listOfModules.length; i < l; i++){
+		var name = listOfModules[i],
+			deferred = Q.defer();
+		if (modules[name]) deferred.resolve(modules[name]);
+		else {
+			modulesDeferreds[name] = modulesDeferreds[name] || [];
+			modulesDeferreds[name].push(deferred);
+		};
+		listOfPromise.push(deferred.promise);
+	}
+	Q.all(listOfPromise).spread(fn);
+};
+app.createModule('facebook', facebook);
+app.createModule('facebook_sdk', facebook_sdk);
 require('./config/express')(app, config);
-require('./config/routes')(app);
-
-app.listen(config.port);
+require('./config/routes')(app)
+.then(function(){
+	if (Object.keys(modulesDeferreds).length > 0){
+		for (name in modulesDeferreds){
+			console.error('Module '+name+' not defined');
+		}
+		process.exit(1);
+	}
+});

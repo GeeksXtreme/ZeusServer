@@ -11,5 +11,7 @@ module.exports = function(app){
 		    }
 	};
 
-	app.get('/admin/login', facebook_sdk.loginRequired({scope : facebook.config.scope}), login);
+	app.require(['facebook','facebook_sdk'], function(facebook, facebook_sdk){
+		app.get('/admin/login', facebook_sdk.loginRequired({scope : facebook.config.scope}), login);	
+	});
 };
