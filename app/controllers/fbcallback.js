@@ -34,21 +34,21 @@ module.exports = function(app){
 			//		}]
 			//	}]}';			
 						
-			// facebook.api('/'+notification_object.entry.value.comment_id, arrParam, function(err,data){
-			// 	if(err) throw err;
-			// 	console.log(data);
-			// 	//xu ly du lieu de emit xuong
-			// 	//
-			// 	var message = 'add post';
-			// 	IO.notify('test',message, notification_object)
-			// 	.then(
-			// 		function(){
-			// 			//success
-			// 		},function(){
-			// 			//err
-			// 		});
-			// });
-			// 
+			facebook.api('/'+notification_object.entry.value.comment_id, arrParam, function(err,data){
+				if(err) throw err;
+				console.log(data);
+				//xu ly du lieu de emit xuong
+				//
+				var message = 'add post';
+				IO.notify('test',message, notification_object)
+				.then(
+					function(){
+						//success
+					},function(){
+						//err
+					});
+			});
+			
 			res.json(1);
 		};
 	};
