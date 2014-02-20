@@ -28,6 +28,15 @@ var config = {
     },
     port: 3000,
     db: 'mongodb://localhost/zeusserver-production'
+  },
+  
+  ios: {
+    root: rootPath,
+    app: {
+      name: 'zeusserver'
+    },
+    port: 3000,
+    db: 'mongodb://root:mininoic@ds033579.mongolab.com:33579/zeus'
   }
 };
 
