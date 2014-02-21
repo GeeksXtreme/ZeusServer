@@ -9,7 +9,8 @@ var express = require('express'),
   config = require('./config/config'),
   facebook = require('./config/facebook');
   readDir = require('./lib/readDir'),
-  Q = require('q');
+  Q = require('q'),
+  Args = require('args-js');
 
 mongoose.connect(config.db);
 var db = mongoose.connection;
@@ -26,6 +27,7 @@ readDir(modelsPath, function(err, data){
 	});
 });
 
+console.title('ANHNT MININOIC CONSOLE');
 var app = express();
 app.httpServer = app.listen(config.port);
 
@@ -42,34 +44,57 @@ app.createModule = function(name, module, override){
 			while (modulesDeferreds[name].length > 0){
 				modulesDeferreds[name].pop().resolve(module);
 			}
+			var resolving = Object.keys(modulesDeferreds),
+				index = resolving.indexOf(name);
+			resolving[index] = resolving[index].green.underline;
+			console.debug('Resolved:  '.green+resolving.join(' ')+' | '+resolving.length);
 			delete modulesDeferreds[name];
-		}
+			if (!Object.keys(modulesDeferreds).length)  console.done('ALL MODULE RESOLVED'.green);
+		} else console.debug('Resolved:  '.green+name);
 	}
 };
 
-app.require = function(listOfModules, fn){
-	var listOfPromise = [];
+app.require = function(){
+	var args = Args([
+		{listOfModules: Args.ARRAY    | Args.Optional},
+		{fn: 			Args.FUNCTION | Args.Required}
+	], arguments);
+	var fn = args.fn, listOfModules = args.listOfModules;
+	var fnString = fn.toString(),
+	    fnListOfModules = fnString
+	    .substring(
+			fnString.indexOf('(')+1,
+			fnString.indexOf(')'))
+		.replace(/ /g,'')
+		.split(',');
+	if (!listOfModules) {
+		listOfModules = fnListOfModules;
+	} else {
+	    var l = listOfModules.length, fnl = fnListOfModules.length;
+	    if (l < fnl) for (var i = l, L = fnl; i < L; i++){
+    	    listOfModules[i] = fnListOfModules[i];
+    	} else listOfModules = fnListOfModules;
+    }
+	
+	var listOfPromise = [], log = false;;
 	for (var i = 0, l = listOfModules.length; i < l; i++){
 		var name = listOfModules[i],
 			deferred = Q.defer();
 		if (modules[name]) deferred.resolve(modules[name]);
 		else {
 			modulesDeferreds[name] = modulesDeferreds[name] || [];
+			if (!modulesDeferreds[name].length) log = true;
 			modulesDeferreds[name].push(deferred);
 		};
 		listOfPromise.push(deferred.promise);
 	}
+	var resolving = Object.keys(modulesDeferreds);
+	if (log) console.debug('Resolving: '.yellow+resolving.join(' ')+' | '+resolving.length);
+	if (!resolving.length) console.done('ALL MODULE RESOLVED'.green);
 	Q.all(listOfPromise).spread(fn);
 };
+console.title('STARTING SERVER');
 app.createModule('facebook', facebook);
 app.createModule('facebook_sdk', facebook_sdk);
 require('./config/express')(app, config);
-require('./config/routes')(app)
-.then(function(){
-	if (Object.keys(modulesDeferreds).length > 0){
-		for (name in modulesDeferreds){
-			console.error('Module '+name+' not defined');
-		}
-		process.exit(1);
-	}
-});
+require('./config/routes')(app);
